@@ -1,0 +1,79 @@
+CASE 1
+Veri Hazýrlama:
+ 
+CREATE TABLE UsedVehicles (
+    id INT PRIMARY KEY,
+    Make_Name NVARCHAR(100),        
+    Model_Name NVARCHAR(100),      
+    Year INT,                  
+    Mileage INT,              
+    Price DECIMAL(18,2),      
+    DaysOnMarket INT,          
+    City NVARCHAR(20)        
+);
+ 
+INSERT INTO UsedVehicles (ID, Make_Name, Model_Name, Year, Mileage, Price, DaysOnMarket, City) VALUES
+ 
+ 
+ 
+–Ayný yýl üretilmiþ ayný marka model arabalarýn ortalama ve kendi fiyatlarý ve ortalamadan farklarý
+ 
+WITH PriceCTE AS (
+    SELECT
+        ID,
+        Make_Name,
+        Model_Name,
+        Year,
+        Price,
+        City,
+        AVG(Price) OVER (
+            PARTITION BY Make_Name, Model_Name, Year
+        ) AS AvgPriceByCityMake
+    FROM UsedVehicles
+)
+ 
+ 
+SELECT
+    ID,
+    Make_Name,
+    Model_Name,
+    Year,
+    CAST(ROUND(Price,2) AS FLOAT) AS Price,
+    City,
+    CAST(ROUND(AvgPriceByCityMake,2) AS FLOAT) AS AvgPriceByCityMake,
+    CAST(ROUND(Price - AvgPriceByCityMake,2) AS FLOAT) AS fark_marka
+FROM PriceCTE;
+ 
+ 
+ -- Þehir bazlý arabalarýn ortalama fiyatý ve araba sayýsý
+ 
+SELECT 
+    City,
+    CAST(ROUND(AVG(Price),1) AS FLOAT) AS ortalama_fiyat,
+    COUNT(*) AS vehicle_count
+FROM UsedVehicles
+GROUP BY City
+ORDER BY avg_price DESC;
+ 
+ 
+ -- Þehir ve marka bazlý arabalarýn ortalama fiyatý ve araba sayýsý 
+ 
+SELECT 
+    City,
+    Make_Name,
+    AVG(Price) AS avg_price,
+    COUNT(*)   AS vehicle_count
+FROM UsedVehicles
+GROUP BY City,Make_Name
+ORDER BY avg_price DESC;
+ 
+–Model bazlý araçlarýn ilanda ortalama kalma süresi
+ 
+SELECT 
+    Model_Name,
+    AVG(DaysOnMarket) AS DaysonMarket
+FROM UsedVehicles
+GROUP BY Model_Name
+ORDER BY DaysonMarket ASC;
+ 
+ 
